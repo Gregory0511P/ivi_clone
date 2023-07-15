@@ -1,5 +1,6 @@
 import {Model, Table} from "sequelize-typescript";
 
+
 interface FilmCreationAttrs {
     name: string,
     englishName: string,
