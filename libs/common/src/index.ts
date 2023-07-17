@@ -4,6 +4,10 @@ export * from './services/common.service';
 export * from './modules/postgresFilmDb.module';
 export * from './modules/postgresUserDb.module';
 
+export * from './dto/user_dto/registration.dto';
+export * from './dto/user_dto/userLogin.dto';
+export * from './dto/user_dto/userUpdate.dto';
+
 export * from './models/users_model/user.model';
 export * from './models/users_model/user_roles.model';
 export * from './models/roles_model/role.model';
@@ -22,4 +26,11 @@ export * from './models/film_model/film_musicians.model';
 export * from './models/film_model/film_producers.model';
 export * from './models/film_model/film_writers.model';
 export * from './models/film_model/related_films.model';
-
+export * from './models/genre_model/genre.model';
+export * from './models/genre_model/film_genres.model';
+export * from './models/country_model/country.model';
+export * from './models/country_model/film_country.model';
+export * from './models/award_model/award.model';
+export * from './models/award_model/nomination.model';
+export * from './models/award_model/award_nomination.model';
+export * from './models/award_model/film_awards.model';
