@@ -7,6 +7,18 @@ export * from './modules/postgresUserDb.module';
 export * from './dto/user_dto/registration.dto';
 export * from './dto/user_dto/userLogin.dto';
 export * from './dto/user_dto/userUpdate.dto';
+export * from './dto/film_dto/filmCreate.dto';
+export * from './dto/film_dto/filmUpdate.dto';
+export * from './dto/film_dto/relatedFilmAdd.dto';
+export * from './dto/person_dto/personCreate.dto';
+export * from './dto/person_dto/personUpdate.dto';
+export * from './dto/person_dto/personAdd.dto';
+export * from './dto/genre_dto/genreCreate.dto';
+export * from './dto/genre_dto/genreUpdate.dto';
+export * from './dto/genre_dto/genreAdd.dto';
+export * from './dto/country_dto/countryCreate.dto';
+export * from './dto/country_dto/countryUpdate.dto';
+export * from './dto/country_dto/countryAdd.dto';
 
 export * from './models/users_model/user.model';
 export * from './models/users_model/user_roles.model';
