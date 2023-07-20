@@ -19,6 +19,17 @@ export * from './dto/genre_dto/genreAdd.dto';
 export * from './dto/country_dto/countryCreate.dto';
 export * from './dto/country_dto/countryUpdate.dto';
 export * from './dto/country_dto/countryAdd.dto';
+export * from './dto/awards_dto/awardCreate.dto';
+export * from './dto/awards_dto/awardUpdate.dto';
+export * from './dto/awards_dto/awardAdd.dto';
+export * from './dto/awards_dto/nominationCreate.dto';
+export * from './dto/role_dto/roleCreate.dto';
+export * from './dto/role_dto/roleUpdate.dto';
+export * from './dto/role_dto/roleAdd.dto';
+export * from './dto/profession_dto/professionCreate.dto';
+export * from './dto/profession_dto/professionUpdate.dto';
+export * from './dto/review_dto/reviewCreate.dto';
+export * from './dto/review_dto/reviewUpdate.dto';
 
 export * from './models/users_model/user.model';
 export * from './models/users_model/user_roles.model';
