@@ -57,3 +57,5 @@ export * from './models/award_model/award.model';
 export * from './models/award_model/nomination.model';
 export * from './models/award_model/award_nomination.model';
 export * from './models/award_model/film_awards.model';
+
+export * from './driver';
