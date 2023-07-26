@@ -58,4 +58,13 @@ export * from './models/award_model/nomination.model';
 export * from './models/award_model/award_nomination.model';
 export * from './models/award_model/film_awards.model';
 
+export * from './guards/login.guard';
+export * from './guards/logout.guard';
+export * from './guards/google.guard';
+export * from './guards/roles.guard';
+export * from './guards/jwtAuth.guard';
+export * from './guards/curentUserOrAdmin.guard';
+export * from './guards/vk.guard';
+export * from './guards/rolesAuth.decorator';
+
 export * from './driver';
