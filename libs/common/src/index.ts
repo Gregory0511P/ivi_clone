@@ -67,4 +67,6 @@ export * from './guards/curentUserOrAdmin.guard';
 export * from './guards/vk.guard';
 export * from './guards/rolesAuth.decorator';
 
+export * from './pipes/validation.pipe';
+
 export * from './driver';
