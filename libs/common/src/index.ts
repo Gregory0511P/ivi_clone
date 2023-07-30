@@ -69,4 +69,6 @@ export * from './guards/rolesAuth.decorator';
 
 export * from './pipes/validation.pipe';
 
+export * from './maps/maps';
+
 export * from './driver';
