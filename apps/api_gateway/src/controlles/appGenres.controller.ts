@@ -1,7 +1,7 @@
-import {Body, Controller, Delete, Get, Inject, Param, Post, Put} from '@nestjs/common';
+import {Body, Controller, Delete, Get, Inject, Param, Post, Put, UseGuards} from '@nestjs/common';
 import {ClientProxy} from "@nestjs/microservices";
-import {ApiTags} from "@nestjs/swagger";
-import {GenreCreateDto, GenreUpdateDto} from "@app/common";
+import {ApiOperation, ApiResponse, ApiTags} from "@nestjs/swagger";
+import {GenreCreateDto, Genre, Roles, RolesGuard, GenreUpdateDto} from "@app/common";
 
 
 @ApiTags("Жанры фильмов")
@@ -10,7 +10,10 @@ export class AppGenresController {
     constructor(@Inject('GENRE') private readonly genreClient: ClientProxy) {
     }
 
-
+    @ApiOperation({summary: "Создание нового жанра"})
+    @ApiResponse({status: 201, type: Genre})
+    @Roles("ADMIN", "SUPERUSER")
+    @UseGuards(RolesGuard)
     @Post("/genres")
     async createGenre(@Body() createGenreDto: GenreCreateDto) {
         return this.genreClient.send(
@@ -22,7 +25,9 @@ export class AppGenresController {
         );
     }
 
-
+    @ApiOperation({summary: "Получение списка всех жанров"})
+    @ApiResponse({status: 200, type: [GenreCreateDto]})
+    @Get("/genres")
     async getAllGenres() {
         return this.genreClient.send(
             {
@@ -31,7 +36,8 @@ export class AppGenresController {
         );
     }
 
-
+    @ApiOperation({summary: "Получение жанра по id"})
+    @ApiResponse({status: 200, type: Genre})
     @Get("/genres/:id")
     async getGenre(@Param("id") id: any) {
         return this.genreClient.send(
@@ -43,7 +49,10 @@ export class AppGenresController {
         )
     }
 
-
+    @ApiOperation({summary: "Редактирование жанра по id"})
+    @ApiResponse({status: 201, type: Genre})
+    @Roles("ADMIN", "SUPERUSER")
+    @UseGuards(RolesGuard)
     @Put("/genres/:id")
     async editGenre(@Body() updateGenreDto: GenreUpdateDto,
                     @Param("id") id: any) {
@@ -57,7 +66,10 @@ export class AppGenresController {
         )
     }
 
-
+    @ApiOperation({summary: "Удаление страны по id"})
+    @ApiResponse({status: 201})
+    @Roles("ADMIN", "SUPERUSER")
+    @UseGuards(RolesGuard)
     @Delete("/genres/:id")
     async deleteGenre(@Param('id') id: any) {
         return this.genreClient.send(

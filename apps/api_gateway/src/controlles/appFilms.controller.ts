@@ -1,14 +1,16 @@
-import {Body, Controller, Delete, Get, Inject, Param, Post, Put, Query} from '@nestjs/common';
+import {Body, Controller, Delete, Get, Inject, Param, Post, Put, Query, Req, UseGuards} from '@nestjs/common';
 import {ClientProxy} from "@nestjs/microservices";
 import {AppService} from "../app.service";
-import {ApiTags} from "@nestjs/swagger";
+import {ApiOperation, ApiParam, ApiQuery, ApiResponse, ApiTags} from "@nestjs/swagger";
 
 import {
     AwardAddDto,
+    CountryAddDto,
+    GenreAddDto,
     PersonAddDto,
     RelatedFilmAddDto,
     FilmCreateDto,
-    FilmUpdateDto,
+    Film, Roles, RolesGuard, FilmUpdateDto,
 } from "@app/common";
 
 
@@ -18,7 +20,10 @@ export class AppFilmsController {
     constructor(@Inject('FILM') private readonly filmClient: ClientProxy,
                 private appService: AppService) {}
 
-
+    @ApiOperation({summary: "Создание нового фильма. Лучше этот метод не использовать, а использовать метод parse/:id"})
+    @ApiResponse({status: 201, type: Film})
+    @Roles("ADMIN", "SUPERUSER")
+    @UseGuards(RolesGuard)
     @Post("/films")
     async createFilm(@Body() createFilmDto: FilmCreateDto) {
         return this.filmClient.send(
@@ -30,7 +35,19 @@ export class AppFilmsController {
         );
     }
 
-
+    @ApiOperation({summary: "Получение списка всех фильмов"})
+    @ApiQuery({ name: "db_limit", required: false, example: 200, description: `Ограничение на количество 
+    выводимых данных из бд. Если присутствует, всегда выполняется в первую очередь`})
+    @ApiQuery({ name: "person", required: false, example: "Мартин",  description: `Поиск фильма по имени персоны 
+    как на русском, так и на английском языке`})
+    @ApiQuery({ name: "search_query", required: false, example: "Inception", description: `Поиск фильма по названию 
+    как на русском, так и на английском языке`})
+    @ApiQuery({ name: "rating_gte", required: false, example: 5, description: `Фильтрация фильмов по рейтингу. 
+    Ищутся фильмы с рейтингом больше или равным указанному`})
+    @ApiQuery({ name: "ratingsNumber_gte", required: false, example: 10000, description: `Фильтрация фильмов по 
+    количеству оценок. Ищутся фильмы с количеством оценок больше или равным указанному`})
+    @ApiQuery({ name: "limit", required: false, example: 200, description: "Ограничение на количество выводимых данных"})
+    @ApiResponse({status: 200, type: [FilmCreateDto]})
     @Get("/films")
     async getAllFilms(@Query() query) {
         return this.filmClient.send(
@@ -41,8 +58,25 @@ export class AppFilmsController {
             },
         );
     }
-
-
+    @ApiOperation({summary: `Фильтрация фильма по одному из фильтров: по жанру, по году, по стране. 
+    Список доступных жанров можно посмотреть в файле libs/common/src/maps/maps.ts. Год может быть в виде числа, например '2011',
+    или в виде числового интервала '2011-2020'. Страна принимает вид домена страны без точки, узнать который можно по ссылке 
+    https://ru.wikipedia.org/wiki/Список_доменов_верхнего_уровня. Например для Франции это будет 'fr'.
+    Имеется возможность фильтрации по нескольким жанрам или странам. В таком случае жанры или страны перечисляются через '+'.
+    Примеры запроса: localhost:3000/films/filter/fr, localhost:3000/films/filter/drama+romance`})
+    @ApiQuery({ name: "db_limit", required: false, example: 200, description: `Ограничение на количество 
+    выводимых данных из бд. Если присутствует, всегда выполняется в первую очередь`})
+    @ApiQuery({ name: "person", required: false, example: "Мартин",  description: `Поиск фильма по имени персоны 
+    как на русском, так и на английском языке`})
+    @ApiQuery({ name: "search_query", required: false, example: "Inception", description: `Поиск фильма по названию 
+    как на русском, так и на английском языке`})
+    @ApiQuery({ name: "rating_gte", required: false, example: 5, description: `Фильтрация фильмов по рейтингу. 
+    Ищутся фильмы с рейтингом больше или равным указанному`})
+    @ApiQuery({ name: "ratingsNumber_gte", required: false, example: 10000, description: `Фильтрация фильмов по 
+    количеству оценок. Ищутся фильмы с количеством оценок больше или равным указанному`})
+    @ApiQuery({ name: "limit", required: false, example: 200, description: "Ограничение на количество выводимых данных"})
+    @ApiResponse({status: 200, type: [FilmCreateDto]})
+    @ApiParam({name: "filter1", example: "drama", description: "Первый фильтр"})
     @Get("/films/filter/:filter1")
     async filterFilmWithOneFilter(@Param("filter1") filter1: any,
                                   @Query() query) {
@@ -64,7 +98,26 @@ export class AppFilmsController {
         );
     }
 
-
+    @ApiOperation({summary: `Фильтрация фильма по двум из фильтров: по жанру, по году, по стране. 
+    Список доступных жанров можно посмотреть в файле libs/common/src/maps/maps.ts. Год может быть в виде числа, например '2011',
+    или в виде числового интервала '2011-2020'. Страна принимает вид домена страны без точки, узнать который можно по ссылке 
+    https://ru.wikipedia.org/wiki/Список_доменов_верхнего_уровня. Например для Франции это будет 'fr'.
+    Имеется возможность фильтрации по нескольким жанрам или странам. В таком случае жанры или страны перечисляются через '+'. 
+    Порядок расположения фильтров: жанр -> год -> страна. Пример запроса: localhost:3000/films/filter/adventure/2010`})
+    @ApiResponse({status: 200, type: [FilmCreateDto]})
+    @ApiQuery({ name: "db_limit", required: false, example: 200, description: `Ограничение на количество 
+    выводимых данных из бд. Если присутствует, всегда выполняется в первую очередь`})
+    @ApiQuery({ name: "person", required: false, example: "Мартин",  description: `Поиск фильма по имени персоны 
+    как на русском, так и на английском языке`})
+    @ApiQuery({ name: "search_query", required: false, example: "Inception", description: `Поиск фильма по названию 
+    как на русском, так и на английском языке`})
+    @ApiQuery({ name: "rating_gte", required: false, example: 5, description: `Фильтрация фильмов по рейтингу. 
+    Ищутся фильмы с рейтингом больше или равным указанному`})
+    @ApiQuery({ name: "ratingsNumber_gte", required: false, example: 10000, description: `Фильтрация фильмов по 
+    количеству оценок. Ищутся фильмы с количеством оценок больше или равным указанному`})
+    @ApiQuery({ name: "limit", required: false, example: 200, description: "Ограничение на количество выводимых данных"})
+    @ApiParam({name: "filter1", example: "drama", description: "Первый фильтр"})
+    @ApiParam({name: "filter2", example: 2010, description: "Второй фильтр"})
     @Get("/films/filter/:filter1/:filter2")
     async filterFilmWithTwoFilters(@Param("filter1") filter1: any,
                                    @Param("filter2") filter2: any,
@@ -88,7 +141,27 @@ export class AppFilmsController {
         );
     }
 
-
+    @ApiOperation({summary: `Фильтрация фильма по двум из фильтров: по жанру, по году, по стране. 
+    Список доступных жанров можно посмотреть в файле libs/common/src/maps/maps.ts. Год может быть в виде числа, например '2011',
+    или в виде числового интервала '2011-2020'. Страна принимает вид домена страны без точки, узнать который можно по ссылке 
+    https://ru.wikipedia.org/wiki/Список_доменов_верхнего_уровня. Например для Франции это будет 'fr'.
+    Имеется возможность фильтрации по нескольким жанрам или странам. В таком случае жанры или страны перечисляются через '+'. 
+    Порядок расположения фильтров: жанр -> год -> страна. Пример запроса: localhost:3000/films/filter/horror/2000-2005/us+ru`})
+    @ApiQuery({ name: "db_limit", required: false, example: 200, description: `Ограничение на количество 
+    выводимых данных из бд. Если присутствует, всегда выполняется в первую очередь`})
+    @ApiQuery({ name: "person", required: false, example: "Мартин",  description: `Поиск фильма по имени персоны 
+    как на русском, так и на английском языке`})
+    @ApiQuery({ name: "search_query", required: false, example: "Inception", description: `Поиск фильма по названию 
+    как на русском, так и на английском языке`})
+    @ApiQuery({ name: "rating_gte", required: false, example: 5, description: `Фильтрация фильмов по рейтингу. 
+    Ищутся фильмы с рейтингом больше или равным указанному`})
+    @ApiQuery({ name: "ratingsNumber_gte", required: false, example: 10000, description: `Фильтрация фильмов по 
+    количеству оценок. Ищутся фильмы с количеством оценок больше или равным указанному`})
+    @ApiQuery({ name: "limit", required: false, example: 200, description: "Ограничение на количество выводимых данных"})
+    @ApiResponse({status: 200, type: [FilmCreateDto]})
+    @ApiParam({name: "filter1", example: "drama", description: "Первый фильтр"})
+    @ApiParam({name: "filter2", example: 2010, description: "Второй фильтр"})
+    @ApiParam({name: "filter3", example: "us", description: "Третий фильтр"})
     @Get("/films/filter/:filter1/:filter2/:filter3")
     async filterFilmWithThreeFilters(@Param("filter1") filter1: any,
                                      @Param("filter2") filter2: any,
@@ -114,7 +187,9 @@ export class AppFilmsController {
         );
     }
 
-
+    @ApiOperation({summary: "Получение фильма по id"})
+    @ApiResponse({status: 200, type: Film})
+    @ApiParam({name: "id", example: 1})
     @Get("/films/:id")
     async getFilm(@Param("id") id: any) {
         return this.filmClient.send(
@@ -126,7 +201,10 @@ export class AppFilmsController {
         );
     }
 
-
+    @ApiOperation({summary: `Получение списка фильмов с указанным названием. Работает с русским и оригинальным,
+    полным и неполныи названиями`})
+    @ApiResponse({status: 200, type: Film})
+    @ApiParam({name: "id", example: 1})
     @Get("/films/name/:name")
     async getFilmsByName(@Param("name") name: any) {
         return this.filmClient.send(
@@ -139,7 +217,11 @@ export class AppFilmsController {
         );
     }
 
-
+    @ApiOperation({summary: "Редактирование фильма по id, можно редактировать только название"})
+    @ApiResponse({status: 201, type: Film})
+    @ApiParam({name: "id", example: 1})
+    @Roles("ADMIN", "SUPERUSER")
+    @UseGuards(RolesGuard)
     @Put("/films/:id")
     async editFilm(@Body() updateFilmDto: FilmUpdateDto,
                    @Param("id") id: any) {
@@ -153,7 +235,11 @@ export class AppFilmsController {
         );
     }
 
-
+    @ApiOperation({summary: "Удаление фильма по id"})
+    @ApiResponse({status: 201})
+    @ApiParam({name: "id", example: 1})
+    @Roles("ADMIN", "SUPERUSER")
+    @UseGuards(RolesGuard)
     @Delete("/films/:id")
     async deleteFilm(@Param("id") id: any) {
         return this.filmClient.send(
@@ -165,7 +251,11 @@ export class AppFilmsController {
         );
     }
 
-
+    @ApiOperation({summary: "Добавление фильму с указанным id режиссера"})
+    @ApiResponse({status: 201})
+    @ApiParam({name: "id", example: 1})
+    @Roles("ADMIN", "SUPERUSER")
+    @UseGuards(RolesGuard)
     @Post("/films/:id/add/director")
     async addDirector(@Body() addPersonDto: PersonAddDto,
                       @Param("id") id: any) {
@@ -177,7 +267,11 @@ export class AppFilmsController {
         })
     }
 
-
+    @ApiOperation({summary: "Добавление фильму с указанным id актера"})
+    @ApiResponse({status: 201})
+    @ApiParam({name: "id", example: 1})
+    @Roles("ADMIN", "SUPERUSER")
+    @UseGuards(RolesGuard)
     @Post("/films/:id/add/actor")
     async addActor(@Body() addPersonDto: PersonAddDto,
                    @Param("id") id: any) {
@@ -189,7 +283,11 @@ export class AppFilmsController {
         })
     }
 
-
+    @ApiOperation({summary: "Добавление фильму с указанным id сценариста"})
+    @ApiResponse({status: 201})
+    @ApiParam({name: "id", example: 1})
+    @Roles("ADMIN", "SUPERUSER")
+    @UseGuards(RolesGuard)
     @Post("/films/:id/add/writer")
     async addWriter(@Body() addPersonDto: PersonAddDto,
                     @Param("id") id: any) {
@@ -201,7 +299,11 @@ export class AppFilmsController {
         })
     }
 
-
+    @ApiOperation({summary: "Добавление фильму с указанным id продюсера"})
+    @ApiResponse({status: 201})
+    @ApiParam({name: "id", example: 1})
+    @Roles("ADMIN", "SUPERUSER")
+    @UseGuards(RolesGuard)
     @Post("/films/:id/add/producer")
     async addProducer(@Body() addPersonDto: PersonAddDto,
                       @Param("id") id: any) {
@@ -213,7 +315,11 @@ export class AppFilmsController {
         })
     }
 
-
+    @ApiOperation({summary: "Добавление фильму с указанным id оператора"})
+    @ApiResponse({status: 201})
+    @ApiParam({name: "id", example: 1})
+    @Roles("ADMIN", "SUPERUSER")
+    @UseGuards(RolesGuard)
     @Post("/films/:id/add/cinematography")
     async addCinematography(@Body() addPersonDto: PersonAddDto,
                             @Param('id') id: any) {
@@ -225,7 +331,11 @@ export class AppFilmsController {
         })
     }
 
-
+    @ApiOperation({summary: "Добавление фильму с указанным id композитора"})
+    @ApiResponse({status: 201})
+    @ApiParam({name: "id", example: 1})
+    @Roles("ADMIN", "SUPERUSER")
+    @UseGuards(RolesGuard)
     @Post("/films/:id/add/musician")
     async addMusician(@Body() addPersonDto: PersonAddDto,
                       @Param("id") id: any) {
@@ -237,7 +347,11 @@ export class AppFilmsController {
         })
     }
 
-
+    @ApiOperation({summary: "Добавление фильму с указанным id художника"})
+    @ApiResponse({status: 201})
+    @ApiParam({name: "id", example: 1})
+    @Roles("ADMIN", 'SUPERUSER')
+    @UseGuards(RolesGuard)
     @Post("/films/:id/add/designer")
     async addDesigner(@Body() addPersonDto: PersonAddDto,
                       @Param("id") id: any) {
@@ -249,7 +363,11 @@ export class AppFilmsController {
         })
     }
 
-
+    @ApiOperation({summary: "Добавление фильму с указанным id монтажера"})
+    @ApiResponse({status: 201})
+    @ApiParam({name: "id", example: 1})
+    @Roles("ADMIN", "SUPERUSER")
+    @UseGuards(RolesGuard)
     @Post("/films/:id/add/editor")
     async addEditor(@Body() addPersonDto: PersonAddDto,
                     @Param("id") id: any) {
@@ -261,9 +379,13 @@ export class AppFilmsController {
         })
     }
 
-
+    @ApiOperation({summary: "Добавление фильму с указанным id жанра"})
+    @ApiResponse({status: 201})
+    @ApiParam({name: "id", example: 1})
+    @Roles("ADMIN", "SUPERUSER")
+    @UseGuards(RolesGuard)
     @Post("/films/:id/add/genre")
-    async addGenre(@Body() addGenreDto: PersonAddDto,
+    async addGenre(@Body() addGenreDto: GenreAddDto,
                    @Param("id") id: any) {
         return this.filmClient.send({
             cmd: "add-genre"
@@ -273,9 +395,13 @@ export class AppFilmsController {
         })
     }
 
-
+    @ApiOperation({summary: "Добавление фильму с указанным id страны"})
+    @ApiResponse({status: 201})
+    @ApiParam({name: "id", example: 1})
+    @Roles("ADMIN", "SUPERUSER")
+    @UseGuards(RolesGuard)
     @Post("/films/:id/add/country")
-    async addCountry(@Body() addCountryDto: PersonAddDto,
+    async addCountry(@Body() addCountryDto: CountryAddDto,
                      @Param("id") id: any) {
         return this.filmClient.send({
             cmd: "add-country"
@@ -285,7 +411,11 @@ export class AppFilmsController {
         })
     }
 
-
+    @ApiOperation({summary: "Добавление фильму с указанным id награды"})
+    @ApiResponse({status: 201})
+    @ApiParam({name: "id", example: 1})
+    @Roles("ADMIN", "SUPERUSER")
+    @UseGuards(RolesGuard)
     @Post("/films/:id/add/award")
     async addAward(@Body() addAwardDto: AwardAddDto,
                    @Param("id") id: any) {
@@ -297,7 +427,11 @@ export class AppFilmsController {
         })
     }
 
-
+    @ApiOperation({summary: "Добавление фильму с указанным id связанного фильма"})
+    @ApiResponse({status: 201})
+    @ApiParam({name: "id", example: 1})
+    @Roles("ADMIN", "SUPERUSER")
+    @UseGuards(RolesGuard)
     @Post("/films/:id/add/relatedFilm")
     async addRelatedFilm(@Body() addRelatedFilmDto: RelatedFilmAddDto,
                          @Param("id") id: any) {
@@ -309,7 +443,9 @@ export class AppFilmsController {
         })
     }
 
-
+    @ApiOperation({summary: "Получение всех персон фильма с указанным id"})
+    @ApiResponse({status: 200, type: Film})
+    @ApiParam({name: "id", example: 1})
     @Get("/films/:id/persons")
     async getAllPersonsByFilm(@Param("id") id: any) {
         return this.filmClient.send({

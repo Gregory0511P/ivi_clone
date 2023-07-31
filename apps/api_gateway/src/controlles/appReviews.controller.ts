@@ -1,8 +1,11 @@
-import {Body, Controller, Delete, Get, Inject, Param, Post, Put, Req} from '@nestjs/common';
+import {Body, Controller, Delete, Get, Inject, Param, Post, Put, Req, UseGuards} from '@nestjs/common';
 import {ClientProxy} from "@nestjs/microservices";
 import {ApiOperation, ApiParam, ApiResponse, ApiTags} from "@nestjs/swagger";
 import {
     ReviewCreateDto,
+    CurrentUserOrAdminGuard,
+    GoogleAuthenticatedGuard,
+    JwtAuthGuard,
     Review
 } from "@app/common";
 
@@ -13,7 +16,10 @@ export class AppReviewController {
     constructor(@Inject('REVIEW') private readonly reviewClient: ClientProxy) {
     }
 
-
+    @ApiOperation({summary: "Добавление комментария к фильму с указанным filmId"})
+    @ApiResponse({status: 201, type: Review})
+    @ApiParam({name: "filmId", example: 1, description: "id фильма"})
+    @UseGuards(JwtAuthGuard || GoogleAuthenticatedGuard)
     @Post("/films/:filmId")
     async addReview(@Body() createReviewDto: ReviewCreateDto,
                     @Req() request,
@@ -32,6 +38,11 @@ export class AppReviewController {
         );
     }
 
+    @ApiOperation({summary: "Добавление комментария к комментарию с указанным parentId к фильму с указанным filmId"})
+    @ApiResponse({status: 201, type: Review})
+    @ApiParam({name: "filmId", example: 1, description: "id фильма"})
+    @ApiParam({name: "parentId", example: 1, description: "id родительского комментария"})
+    @UseGuards(JwtAuthGuard || GoogleAuthenticatedGuard)
     @Post("/films/:filmId/review/:parentId")
     async addChildReview(@Body() createReviewDto: ReviewCreateDto,
                          @Req() request,
@@ -77,7 +88,10 @@ export class AppReviewController {
         )
     }
 
-
+    @ApiOperation({summary: "Редактирование комментария с указанным id"})
+    @ApiResponse({status: 201, type: Review})
+    @ApiParam({name: "id", example: 1})
+    @UseGuards(CurrentUserOrAdminGuard)
     @Put("/reviews/:id")
     async editReview(@Body() createReviewDto: ReviewCreateDto,
                      @Param("id") id: any) {
@@ -91,7 +105,10 @@ export class AppReviewController {
         )
     }
 
-
+    @ApiOperation({summary: "Удаление комментария с указанным id"})
+    @ApiResponse({status: 201})
+    @ApiParam({name: "id", example: 1})
+    @UseGuards(CurrentUserOrAdminGuard)
     @Delete("/reviews/:id")
     async deleteReview(@Param("id") id: any,
                        @Req() request) {
